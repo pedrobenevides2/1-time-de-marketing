@@ -108,6 +108,12 @@ conteúdo longo, ads e analytics. Zero custo de assinatura extra.
 | `/analytics-report` | Relatório mensal consolidado |
 | `/seo-audit` | Auditoria rápida SEO on-page |
 
+#### Utilidades
+| Skill | Função |
+|-------|--------|
+| `/scraping` | Coleta dados públicos da web (concorrentes, tendências, keywords) |
+| `/diagrama` | Organogramas, fluxos, Gantt, mindmaps via Mermaid.js |
+
 ---
 
 ## Stack gratuito (zero assinatura)
