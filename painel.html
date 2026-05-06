@@ -597,7 +597,7 @@ body.compact .flowchart-step { padding: 9px; }
     </label>
     <button class="btn btn-secondary btn-sm" onclick="clearChat()">🗑 Limpar</button>
     <button class="btn btn-secondary btn-sm" onclick="openSettings()">⚙ Config</button>
-    <button class="btn btn-teal btn-sm" onclick="saveToSheets()">📊 Salvar no Sheets</button>
+    <button class="btn btn-teal btn-sm" onclick="saveToSheetsManual()">📊 Salvar no Sheets</button>
   </div>
 
   <div class="file-drop" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
@@ -737,7 +737,7 @@ body.compact .flowchart-step { padding: 9px; }
       <div class="settings-divider"></div>
 
       <div class="settings-section">
-        <div class="settings-section-title">📊 Google Sheets (banco de dados)</div>
+        <div class="settings-section-title">📊 Google Sheets + Drive (banco de dados)</div>
         <div class="settings-field">
           <div class="settings-label">Client ID OAuth 2.0</div>
           <input type="text" class="settings-input" id="cfg-gclientid" placeholder="123456789-xxxx.apps.googleusercontent.com">
@@ -747,7 +747,15 @@ body.compact .flowchart-step { padding: 9px; }
           <input type="text" class="settings-input" id="cfg-sheetid" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
           <div class="settings-hint">O ID está na URL da planilha: docs.google.com/spreadsheets/d/<strong>ID</strong>/edit</div>
         </div>
-        <button class="btn btn-secondary" style="width:100%;margin-top:6px" onclick="connectSheets()">🔗 Conectar Google Sheets</button>
+        <div class="settings-field">
+          <div class="settings-label">ID da Pasta no Drive <span style="color:var(--muted)">(para salvar entregáveis)</span></div>
+          <input type="text" class="settings-input" id="cfg-driveid" placeholder="ID da pasta — aparece na URL do Drive">
+          <div class="settings-hint">Abra a pasta no Drive e copie o ID da URL: drive.google.com/drive/folders/<strong>ID</strong></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn btn-secondary" style="flex:1" onclick="connectSheets()">🔗 Conectar Google (Sheets + Drive)</button>
+          <button class="btn btn-secondary btn-sm" onclick="initSheetsHeaders()" title="Cria cabeçalhos na linha 1 da aba Conversas">📋 Init</button>
+        </div>
         <div style="margin-top:8px;padding:10px;background:var(--surface2);border-radius:6px;font-size:10px;color:var(--muted);line-height:1.6">
           <strong style="color:var(--text)">Como configurar:</strong><br>
           1. Acesse <em>console.cloud.google.com</em><br>
@@ -1069,8 +1077,11 @@ const State = {
   apiKey: '',
   sheetId: '',
   clientId: '',
+  driveId: '',
+  ga4Id: '', ga4Mid: '', gsc: '', saEmail: '',
   produto: '',
   icp: '',
+  activeEsteira: null,
   activeAgent: 'diretor-de-marketing',
   messages: [],
   deliverables: [],
@@ -1245,6 +1256,8 @@ function buildEsteiraSelect() {
 function showFlowchart(id) {
   const e = ESTEIRAS.find(x => x.id === id);
   if (!e) return;
+
+  State.activeEsteira = `${e.id} — ${e.name}`;
 
   document.querySelectorAll('.proc-icon').forEach(el => el.classList.remove('active'));
   const icon = document.getElementById('proc-' + id);
@@ -1624,8 +1637,30 @@ async function sendMessage() {
       setTimeout(() => animateIntern(State.activeAgent, nextAgent, 'dados.md'), 400);
     }
 
+    const prevCount = State.deliverables.length;
     detectAndAddDeliverables(reply);
-    if (State.features.sheetsAuto && State.sheetId && State.sheetsToken) saveToSheets();
+
+    if (State.features.sheetsAuto && State.sheetId && State.sheetsToken) {
+      const waitForDrive = async () => {
+        const newDels = State.deliverables.slice(prevCount);
+        await Promise.all(newDels.map(d => {
+          return new Promise(resolve => {
+            const check = () => d.uploading ? setTimeout(check, 300) : resolve();
+            check();
+          });
+        }));
+        const driveLinks = newDels.filter(d => d.driveLink).map(d => d.driveLink);
+        saveToSheets({
+          agentId: State.activeAgent,
+          atividade: 'Conversa',
+          esteira: State.activeEsteira || '—',
+          input: fullText,
+          resposta: reply,
+          driveLinks,
+        });
+      };
+      waitForDrive();
+    }
 
   } catch (err) {
     hideTyping();
@@ -1667,9 +1702,19 @@ function detectAndAddDeliverables(text) {
   }
 }
 
-function addDeliverable(name, content) {
-  State.deliverables.push({ name, content, ts: Date.now() });
+async function addDeliverable(name, content) {
+  const d = { name, content, ts: Date.now(), driveLink: null, uploading: true };
+  State.deliverables.push(d);
   renderDeliverables();
+
+  if (State.sheetsToken) {
+    const link = await uploadToDrive(name, content);
+    d.driveLink = link;
+    d.uploading = false;
+    renderDeliverables();
+  } else {
+    d.uploading = false;
+  }
 }
 
 function renderDeliverables() {
@@ -1678,9 +1723,17 @@ function renderDeliverables() {
     list.innerHTML = '<span style="font-size:11px;color:var(--muted)">Nenhum entregável ainda.</span>';
     return;
   }
-  list.innerHTML = State.deliverables.map((d, i) =>
-    `<a class="deliverable-link" onclick="downloadDeliverable('${d.name}',null,${i})">📄 ${d.name}</a>`
-  ).join('');
+  list.innerHTML = State.deliverables.map((d, i) => {
+    const driveBtn = d.uploading
+      ? `<span style="font-size:9px;color:var(--muted)">⏳ Drive...</span>`
+      : d.driveLink
+        ? `<a href="${d.driveLink}" target="_blank" style="font-size:9px;color:var(--teal);text-decoration:none" title="Abrir no Drive">☁ Drive</a>`
+        : `<span style="font-size:9px;color:var(--muted)" title="Conecte o Google para salvar no Drive">☁ —</span>`;
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <a class="deliverable-link" onclick="downloadDeliverable('${d.name}',null,${i})">📄 ${d.name}</a>
+      ${driveBtn}
+    </div>`;
+  }).join('');
 }
 
 function downloadDeliverable(name, agentId, idx) {
@@ -1801,6 +1854,7 @@ function saveSettings() {
   State.sheetId = document.getElementById('cfg-sheetid').value.trim();
   State.produto = document.getElementById('cfg-produto').value.trim();
   State.icp = document.getElementById('cfg-icp').value.trim();
+  State.driveId = document.getElementById('cfg-driveid').value.trim();
   State.ga4Id = document.getElementById('cfg-ga4id').value.trim();
   State.ga4Mid = document.getElementById('cfg-ga4mid').value.trim();
   State.gsc = document.getElementById('cfg-gsc').value.trim();
@@ -1811,6 +1865,7 @@ function saveSettings() {
   State.features.cache = document.getElementById('feat-cache').checked;
   localStorage.setItem('mkt-cfg', JSON.stringify({
     apiKey: State.apiKey, clientId: State.clientId, sheetId: State.sheetId,
+    driveId: State.driveId,
     produto: State.produto, icp: State.icp, features: State.features,
     ga4Id: State.ga4Id, ga4Mid: State.ga4Mid, gsc: State.gsc, saEmail: State.saEmail,
   }));
@@ -1828,6 +1883,7 @@ function loadSettings() {
     State.sheetId = cfg.sheetId || '';
     State.produto = cfg.produto || '';
     State.icp = cfg.icp || '';
+    State.driveId = cfg.driveId || '';
     State.ga4Id = cfg.ga4Id || '';
     State.ga4Mid = cfg.ga4Mid || '';
     State.gsc = cfg.gsc || '';
@@ -1855,6 +1911,7 @@ function openSettings() {
   document.getElementById('cfg-sheetid').value = State.sheetId;
   document.getElementById('cfg-produto').value = State.produto;
   document.getElementById('cfg-icp').value = State.icp;
+  document.getElementById('cfg-driveid').value = State.driveId || '';
   document.getElementById('cfg-ga4id').value = State.ga4Id || '';
   document.getElementById('cfg-ga4mid').value = State.ga4Mid || '';
   document.getElementById('cfg-gsc').value = State.gsc || '';
@@ -1887,35 +1944,139 @@ function connectSheets() {
 
   const client = google.accounts.oauth2.initTokenClient({
     client_id: clientId,
-    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    scope: [
+      'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive.file',
+    ].join(' '),
     callback: (resp) => {
       if (resp.error) { addSystemMessage('Erro na autenticação Google: ' + resp.error); return; }
       State.sheetsToken = resp.access_token;
       updateBadges();
-      addSystemMessage('Google Sheets conectado com sucesso!');
+      addSystemMessage('Google conectado — Sheets + Drive prontos.');
       saveSettings();
     }
   });
   client.requestAccessToken();
 }
 
-async function saveToSheets() {
-  if (!State.sheetsToken || !State.sheetId) return;
-  const lastMsg = State.messages[State.messages.length - 1];
-  if (!lastMsg) return;
-  const row = [[
-    new Date().toISOString(),
-    State.activeAgent,
-    lastMsg.role,
-    lastMsg.content.slice(0, 1000)
-  ]];
+/* ── DRIVE UPLOAD ─────────────────────────────────────── */
+async function uploadToDrive(name, content) {
+  if (!State.sheetsToken) return null;
+  const folderId = State.driveId;
+  const metadata = {
+    name,
+    mimeType: 'text/plain',
+    ...(folderId ? { parents: [folderId] } : {}),
+  };
+  const boundary = 'mkt_drive_bound';
+  const body = [
+    `--${boundary}`,
+    'Content-Type: application/json; charset=UTF-8',
+    '',
+    JSON.stringify(metadata),
+    `--${boundary}`,
+    'Content-Type: text/plain; charset=UTF-8',
+    '',
+    content,
+    `--${boundary}--`,
+  ].join('\r\n');
+
   try {
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${State.sheetId}/values/Conversas!A:D:append?valueInputOption=USER_ENTERED`, {
+    const res = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${State.sheetsToken}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`,
+        },
+        body,
+      }
+    );
+    if (!res.ok) return null;
+    const { id } = await res.json();
+
+    await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${State.sheetsToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values: row })
+      headers: {
+        'Authorization': `Bearer ${State.sheetsToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ role: 'reader', type: 'anyone' }),
     });
-  } catch(e) { console.warn('Sheets error:', e); }
+
+    return `https://drive.google.com/file/d/${id}/view?usp=sharing`;
+  } catch (e) {
+    console.warn('Drive upload error:', e);
+    return null;
+  }
+}
+
+/* ── SHEETS — CABEÇALHOS ─────────────────────────────── */
+async function initSheetsHeaders() {
+  if (!State.sheetsToken || !State.sheetId) {
+    alert('Conecte o Google primeiro.'); return;
+  }
+  const headers = [['Horário', 'Agente', 'Nickname', 'Atividade', 'Esteira', 'Input', 'Resposta', 'Entregáveis (Drive)']];
+  try {
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${State.sheetId}/values/Conversas!A1:H1?valueInputOption=USER_ENTERED`,
+      {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${State.sheetsToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: headers }),
+      }
+    );
+    addSystemMessage('✅ Cabeçalhos criados na aba "Conversas" (A1:H1).');
+  } catch (e) { console.warn('Sheets headers error:', e); }
+}
+
+/* ── SHEETS — SALVAR LINHA ───────────────────────────── */
+async function saveToSheets(ctx) {
+  if (!State.sheetsToken || !State.sheetId) return;
+
+  const now = new Date();
+  const horario = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+  const a = AGENTS.find(x => x.id === (ctx?.agentId || State.activeAgent));
+  const agentId = a ? a.id : (ctx?.agentId || State.activeAgent);
+  const agentNick = a ? (a.nickname || a.short) : agentId;
+  const atividade = ctx?.atividade || 'Conversa';
+  const esteira = ctx?.esteira || State.activeEsteira || '—';
+  const input = (ctx?.input || '').slice(0, 800);
+  const resposta = (ctx?.resposta || '').slice(0, 1500);
+  const driveLinks = (ctx?.driveLinks || []).join('\n') || '—';
+
+  const row = [[horario, agentId, agentNick, atividade, esteira, input, resposta, driveLinks]];
+
+  try {
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${State.sheetId}/values/Conversas!A:H:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${State.sheetsToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: row }),
+      }
+    );
+  } catch (e) { console.warn('Sheets save error:', e); }
+}
+
+function saveToSheetsManual() {
+  if (!State.sheetsToken || !State.sheetId) {
+    addSystemMessage('Conecte o Google Sheets em ⚙ Config primeiro.');
+    openSettings(); return;
+  }
+  const msgs = State.messages;
+  const lastUser = [...msgs].reverse().find(m => m.role === 'user');
+  const lastAI = [...msgs].reverse().find(m => m.role === 'assistant');
+  const driveLinks = State.deliverables.filter(d => d.driveLink).map(d => d.driveLink);
+  saveToSheets({
+    agentId: State.activeAgent,
+    atividade: 'Salvo manualmente',
+    esteira: State.activeEsteira || '—',
+    input: lastUser ? lastUser.content : '',
+    resposta: lastAI ? lastAI.content : '',
+    driveLinks,
+  }).then(() => addSystemMessage('✅ Salvo no Sheets.'));
 }
 
 /* ══════════════════════════════════════════════
