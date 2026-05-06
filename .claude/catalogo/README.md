@@ -13,6 +13,7 @@ Este diretório contém o catálogo de serviços e as esteiras de processo do ti
 
 ```
 esteiras/
+├── G1-inteligencia-mercado.md  Inteligência — Pesquisa → Direcionamentos 3×3
 ├── A1-icp-persona.md           Fundação — ICP e personas
 ├── A2-posicionamento.md        Fundação — Posicionamento de marca
 ├── A3-go-to-market.md          Fundação — Plano de lançamento
@@ -69,6 +70,7 @@ Cada arquivo segue esta estrutura:
 
 | Agente | Squad | Modelo |
 |--------|-------|--------|
+| `inteligencia-estrategica` | Inteligência | opus-4-7 |
 | `diretor-de-marketing` | Orquestração | opus-4-7 |
 | `content-strategist` | Conteúdo | sonnet-4-6 |
 | `seo-specialist` | Conteúdo | sonnet-4-6 |
@@ -82,6 +84,7 @@ Cada arquivo segue esta estrutura:
 
 ## Skills disponíveis (referência rápida)
 
+`/pesquisa-mercado` `/direcionamentos-estrategicos`  
 `/icp-persona` `/posicionamento` `/content-calendar` `/produto-gtm`  
 `/blog-post` `/white-paper` `/case-study` `/ebook-outline` `/webinar-script` `/podcast-script` `/infographic-brief`  
 `/video-script` `/youtube-seo` `/tiktok-strategy`  

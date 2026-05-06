@@ -1,64 +1,89 @@
 # Progresso de Implementação — Sistema de Esteiras
 
-Última atualização: 30/04/2026
+Última atualização: 05/05/2026
 
-## ✅ Concluído
+## ✅ Concluído — Sistema completo
 
 ### Catálogo base
-- [x] `catalogo/servicos.md` — 24 serviços com IDs, pré-requisitos e tempos
+- [x] `catalogo/servicos.md` — 27 serviços com IDs, pré-requisitos e tempos (A-G)
 - [x] `catalogo/README.md` — grafo de dependências e referência de agentes/skills
+- [x] `CLAUDE.md` do projeto — arquitetura em camadas, agentes, skills, integrações Google
 
-### Esteiras criadas (11 de 27)
-- [x] `A1-icp-persona.md`
-- [x] `A2-posicionamento.md`
-- [x] `A3-go-to-market.md`
-- [x] `B1-estrategia-editorial.md`
-- [x] `B2-blog-seo.md`
-- [x] `C1-video-longo.md`
-- [x] `C2-video-curto.md`
-- [x] `E1-meta-ads.md`
-- [x] `E4-landing-page.md`
-- [x] `F1-relatorio.md`
+### Camada de entrada
+- [x] `.claude/agents/meta-orquestrador.md` — transforma ideia em plano cascata (Opus 4.7)
+- [x] `.claude/skills/estrategia-cascata/SKILL.md` — ponto de entrada, coleta contexto
+
+### Agentes especializados
+- [x] `.claude/agents/diretor-de-marketing.md` — CMO, coordena squads (Opus 4.7)
+- [x] `.claude/agents/inteligencia-estrategica.md` — pesquisa → direcionamentos 3×3 (Opus 4.7)
+- [x] `.claude/agents/content-strategist.md`
+- [x] `.claude/agents/seo-specialist.md`
+- [x] `.claude/agents/criador-de-conteudo.md`
+- [x] `.claude/agents/youtube-specialist.md`
+- [x] `.claude/agents/short-video-creator.md`
+- [x] `.claude/agents/social-media-manager.md`
+- [x] `.claude/agents/ads-strategist.md`
+- [x] `.claude/agents/growth-hacker.md`
+- [x] `.claude/agents/analytics-analyst.md`
+
+### Skills de estratégia e fundação
+- [x] `.claude/skills/icp-persona/SKILL.md`
+- [x] `.claude/skills/posicionamento/SKILL.md`
+- [x] `.claude/skills/produto-gtm/SKILL.md`
+- [x] `.claude/skills/content-calendar/SKILL.md`
+- [x] `.claude/skills/pesquisa-mercado/SKILL.md`
+- [x] `.claude/skills/direcionamentos-estrategicos/SKILL.md`
+
+### Esteiras — Categoria G (Inteligência Estratégica)
+- [x] `catalogo/esteiras/G1-inteligencia-mercado.md`
+
+### Esteiras — Categoria A (Fundação)
+- [x] `catalogo/esteiras/A1-icp-persona.md`
+- [x] `catalogo/esteiras/A2-posicionamento.md`
+- [x] `catalogo/esteiras/A3-go-to-market.md`
+
+### Esteiras — Categoria B (Conteúdo)
+- [x] `catalogo/esteiras/B1-estrategia-editorial.md`
+- [x] `catalogo/esteiras/B2-blog-seo.md`
+- [x] `catalogo/esteiras/B3-conteudo-rico.md`
+- [x] `catalogo/esteiras/B4-podcast-webinar.md`
+- [x] `catalogo/esteiras/B5-infografico.md`
+
+### Esteiras — Categoria C (Vídeo)
+- [x] `catalogo/esteiras/C1-video-longo.md`
+- [x] `catalogo/esteiras/C2-video-curto.md`
+- [x] `catalogo/esteiras/C3-auditoria-youtube.md`
+
+### Esteiras — Categoria D (Social Media)
+- [x] `catalogo/esteiras/D1-gestao-social.md`
+- [x] `catalogo/esteiras/D2-instagram.md`
+- [x] `catalogo/esteiras/D3-linkedin.md`
+- [x] `catalogo/esteiras/D4-facebook.md`
+- [x] `catalogo/esteiras/D5-influenciadores.md`
+- [x] `catalogo/esteiras/D6-engajamento.md`
+
+### Esteiras — Categoria E (Ads)
+- [x] `catalogo/esteiras/E1-meta-ads.md`
+- [x] `catalogo/esteiras/E2-youtube-ads.md`
+- [x] `catalogo/esteiras/E3-tiktok-ads.md`
+- [x] `catalogo/esteiras/E4-landing-page.md`
+- [x] `catalogo/esteiras/E5-performance.md`
+
+### Esteiras — Categoria F (Analytics)
+- [x] `catalogo/esteiras/F1-relatorio.md`
+- [x] `catalogo/esteiras/F2-auditoria-seo.md`
+- [x] `catalogo/esteiras/F3-experimento.md`
+- [x] `catalogo/esteiras/F4-inteligencia.md`
 
 ---
 
-## ⏳ Pendente — Próxima sessão começa aqui
+## Resumo
 
-### Esteiras restantes (17 de 27)
-- [ ] `B3-conteudo-rico.md`
-- [ ] `B4-podcast-webinar.md`
-- [ ] `B5-infografico.md`
-- [ ] `C3-auditoria-youtube.md`
-- [ ] `D1-gestao-social.md`
-- [ ] `D2-instagram.md`
-- [ ] `D3-linkedin.md`
-- [ ] `D4-facebook.md`
-- [ ] `D5-influenciadores.md`
-- [ ] `D6-engajamento.md`
-- [ ] `E2-youtube-ads.md`
-- [ ] `E3-tiktok-ads.md`
-- [ ] `E5-performance.md`
-- [ ] `F2-auditoria-seo.md`
-- [ ] `F3-experimento.md`
-- [ ] `F4-inteligencia.md`
+| Item | Total | Concluído |
+|------|-------|-----------|
+| Esteiras | 27 | 27 |
+| Agentes | 11 | 11 |
+| Skills de entrada | 8+ | 8+ |
+| Arquivos de catálogo | 3 | 3 |
 
-### Agente e skill de entrada
-- [ ] `.claude/agents/meta-orquestrador.md`
-- [ ] `.claude/skills/estrategia-cascata/SKILL.md`
-
-### Atualizações em arquivos existentes
-- [ ] `CLAUDE.md` do projeto — adicionar seção "Sistema de Esteiras"
-- [ ] `.claude/agents/diretor-de-marketing.md` — adicionar nota sobre meta-orquestrador
-
----
-
-## Ordem recomendada para próxima sessão
-
-1. Criar esteiras D1-D6 (Social Media) — alto uso
-2. Criar esteiras B3, B4, B5 (Conteúdo Rico) — complementares
-3. Criar esteiras E2, E3, E5 (Ads complementares)
-4. Criar esteiras F2, F3, F4 (Analytics complementares)
-5. Criar esteira C3 (Auditoria YouTube)
-6. Criar `meta-orquestrador.md`
-7. Criar `estrategia-cascata/SKILL.md`
-8. Atualizar `CLAUDE.md` e `diretor-de-marketing.md`
+**Sistema 100% implementado.**

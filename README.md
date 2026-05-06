@@ -3,6 +3,8 @@
 Equipe completa de agentes e skills de marketing — YouTube, Instagram, TikTok, Facebook,
 conteúdo longo, ads e analytics. Zero custo de assinatura extra.
 
+> **Primeiro acesso?** Leia [`PROTOCOLO.md`](PROTOCOLO.md) antes de começar — ele define a ordem correta de uso e o pré-voo de cada processo.
+
 ---
 
 ## Organograma

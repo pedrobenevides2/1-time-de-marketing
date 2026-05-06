@@ -74,9 +74,20 @@ Referência rápida para o meta-orquestrador selecionar esteiras. Cada serviço 
 
 ---
 
+## Categoria G — Inteligência Estratégica
+
+| ID | Serviço | Entregável | Pré-requisito | Tempo |
+|----|---------|-----------|---------------|-------|
+| G1 | Inteligência de Mercado | achados-pesquisa.md + deck-executivo.md + plano-acoes.md + 3 planilhas operacionais + fluxograma.png | nenhum | longo |
+
+> G1 é esteira de entrada — pode preceder A1 e A2 e alimenta todo o grafo com base em dados reais de pesquisa.
+
+---
+
 ## Grafo de Dependências (resumo)
 
 ```
+G1 (Inteligência de Mercado) ────────────────────────► A1, A2, B1, E1-E3, F4
 A1 (ICP) ─────────────────────────────────────────────► tudo
 A2 (Posicionamento) ──────────────────────────────────► A3, B1, B3, D1, D5, E1-E4
 A3 (GTM) ─────────────────────────────────────────────► campanhas de lançamento
