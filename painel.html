@@ -190,35 +190,72 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
   position: absolute; top: 0; left: 0; right: 0; height: 4px;
   background: linear-gradient(90deg, var(--purple) 0%, var(--teal) 50%, var(--amber) 100%);
 }
-.agents-container {
+/* ── ORG CHART (substitui agents-container) ──────── */
+.org-section {
   position: absolute; top: 28px; left: 0; right: 0; bottom: 60px;
-  display: flex; align-items: flex-end; gap: 0;
-  padding: 0 16px 12px;
-  overflow-x: auto; overflow-y: hidden;
+  display: flex; flex-direction: column; align-items: center;
+  overflow-y: auto; overflow-x: hidden; padding: 6px 8px 8px;
+  gap: 0;
+}
+.org-floor-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.org-label {
+  font-size: 8px; font-weight: 700; text-transform: uppercase;
+  color: var(--muted); letter-spacing: .12em;
+  padding: 1px 8px; background: var(--surface2); border-radius: 3px;
+  margin-bottom: 4px; margin-top: 4px;
+}
+.org-connector { width: 1px; height: 10px; background: var(--border); margin: 0 auto 2px; }
+.org-floor {
+  display: flex; justify-content: center; gap: 8px;
+  flex-wrap: wrap; width: 100%;
 }
 
 /* AGENT DESK */
+.desk-wrap { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
 .agent-desk {
   display: flex; flex-direction: column; align-items: center;
-  width: 110px; flex-shrink: 0; cursor: pointer;
+  width: 95px; flex-shrink: 0; cursor: pointer;
   position: relative; transition: transform .2s;
 }
-.agent-desk:hover { transform: translateY(-4px); }
-.agent-desk:hover .speech-bubble { opacity: 1; transform: translateY(0) scale(1); }
+.agent-desk:hover { transform: translateY(-3px); }
+.agent-desk:hover .speech-bubble { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
 .speech-bubble {
-  position: absolute; top: -28px; left: 50%; transform: translateX(-50%) translateY(4px) scale(.95);
+  position: absolute; top: -28px; left: 50%;
+  transform: translateX(-50%) translateY(4px) scale(.95);
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 8px; padding: 4px 8px; font-size: 9px; font-weight: 600;
   white-space: nowrap; color: var(--text); z-index: 20;
   opacity: 0; transition: all .2s; pointer-events: none;
 }
 .speech-bubble::after {
-  content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+  content: ''; position: absolute; bottom: -5px; left: 50%;
   width: 8px; height: 8px; background: var(--surface2);
   border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
   transform: translateX(-50%) rotate(45deg);
 }
+
+/* Agent status bubble (inspired by claude-office) */
+.agent-bubble {
+  position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  font-size: 8px; padding: 2px 5px; white-space: nowrap; max-width: 86px;
+  overflow: hidden; text-overflow: ellipsis; color: var(--muted);
+  pointer-events: none; opacity: 0; transition: opacity .3s; z-index: 21;
+}
+.agent-bubble.visible { opacity: 1; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.agent-bubble.thinking { animation: blink .9s infinite; color: var(--purple); border-color: var(--purple)40; }
+.agent-bubble.active { color: var(--teal); border-color: var(--teal)40; }
+.agent-bubble.done { color: var(--green); border-color: var(--green)40; }
+
+/* Staff desk (fictional characters) */
+.staff-desk {
+  display: flex; flex-direction: column; align-items: center;
+  width: 95px; flex-shrink: 0; cursor: pointer;
+  position: relative; transition: transform .2s; opacity: .82;
+}
+.staff-desk:hover { transform: translateY(-3px); opacity: 1; }
 
 /* Agent Figure */
 .agent-figure { position: relative; display: flex; flex-direction: column; align-items: center; z-index: 2; }
@@ -292,21 +329,16 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
   font-size: 8px;
 }
 
-/* ── INTERN (estagiário) ──────────────────────────── */
+/* ── INTERN (estagiário) — event-driven ─────────── */
 .intern {
   position: absolute; bottom: 72px; z-index: 30;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  animation: internWalk 12s infinite linear;
+  opacity: 0; left: 60px;
+  transition: left 1.4s ease-in-out, opacity .3s, transform .15s;
   cursor: pointer;
 }
+.intern.intern-active { opacity: 1; }
 .intern:hover .intern-bubble { opacity: 1; }
-@keyframes internWalk {
-  0%   { left: 60px; transform: scaleX(1); }
-  45%  { left: calc(100% - 80px); transform: scaleX(1); }
-  50%  { left: calc(100% - 80px); transform: scaleX(-1); }
-  95%  { left: 60px; transform: scaleX(-1); }
-  100% { left: 60px; transform: scaleX(1); }
-}
 .intern-figure {
   display: flex; flex-direction: column; align-items: center;
 }
@@ -365,6 +397,17 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 }
 .modal-close:hover { background: #3a3d4a; }
 .modal-body { overflow-y: auto; padding: 18px; flex: 1; }
+
+/* ── ZOOM CONTROLS (flowchart) ─────────────────── */
+.zoom-controls { display: flex; align-items: center; gap: 4px; }
+.zoom-btn {
+  width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text); cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+.zoom-btn:hover { background: #3a3d4a; }
+#zoom-pct { font-size: 10px; min-width: 34px; text-align: center; color: var(--muted); }
+#flowchart-zoom-wrap { transform-origin: top center; transition: transform .15s; }
 
 /* ── FLOWCHART MODAL ───────────────────────────────── */
 #modal-flowchart .modal { width: 700px; }
@@ -618,7 +661,7 @@ body.compact .flowchart-step { padding: 9px; }
   <div class="ambient-light al-amber"></div>
   <div class="office-ceiling"></div>
   <span class="office-title">🏢 Escritório — Time de Marketing</span>
-  <div class="agents-container" id="agents-container"></div>
+  <div class="org-section" id="org-section"></div>
   <div class="office-floor"></div>
 
   <!-- Intern -->
@@ -645,9 +688,17 @@ body.compact .flowchart-step { padding: 9px; }
         <div class="modal-title" id="flowchart-title">Esteira</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px" id="flowchart-desc"></div>
       </div>
-      <button class="modal-close" onclick="closeModal('modal-flowchart')">✕</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="zoomFlow(-0.15)" title="Diminuir">−</button>
+          <span id="zoom-pct">100%</span>
+          <button class="zoom-btn" onclick="zoomFlow(0.15)" title="Aumentar">+</button>
+          <button class="zoom-btn" onclick="zoomFlow(0)" title="Resetar">↺</button>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-flowchart')">✕</button>
+      </div>
     </div>
-    <div class="modal-body" id="flowchart-body"></div>
+    <div class="modal-body" id="flowchart-body" style="overflow:auto"></div>
   </div>
 </div>
 
@@ -704,6 +755,35 @@ body.compact .flowchart-step { padding: 9px; }
           3. Credenciais → OAuth 2.0 → Tipo: Aplicativo da Web<br>
           4. Adicione esta URL em "Origens autorizadas": <span id="current-origin" style="color:var(--teal)"></span><br>
           5. Cole o Client ID acima e salve
+        </div>
+      </div>
+
+      <div class="settings-divider"></div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">🔑 Integrações — Stack Gratuito</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">
+          Ferramentas gratuitas do sistema. Preencha somente as que for usar — todas são opcionais.
+        </div>
+        <div class="settings-field">
+          <div class="settings-label">GA4 — Property ID <span style="color:var(--muted)">(ex: 534288947)</span></div>
+          <input type="text" class="settings-input" id="cfg-ga4id" placeholder="Painel GA4 → Admin → Property ID">
+        </div>
+        <div class="settings-field">
+          <div class="settings-label">GA4 — Measurement ID <span style="color:var(--muted)">(ex: G-XXXXXXX)</span></div>
+          <input type="text" class="settings-input" id="cfg-ga4mid" placeholder="G-...">
+        </div>
+        <div class="settings-field">
+          <div class="settings-label">Search Console — Domínio <span style="color:var(--muted)">(ex: sc-domain:seusite.com.br)</span></div>
+          <input type="text" class="settings-input" id="cfg-gsc" placeholder="sc-domain:...">
+        </div>
+        <div class="settings-field">
+          <div class="settings-label">Service Account — E-mail <span style="color:var(--muted)">(para scripts Python)</span></div>
+          <input type="text" class="settings-input" id="cfg-sa-email" placeholder="seu-projeto@appspot.iam.gserviceaccount.com">
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5;background:var(--surface2);padding:8px;border-radius:6px">
+          💡 Essas credenciais alimentam os scripts <code>credentials/ga4_report.py</code> e <code>credentials/search_console_report.py</code>.
+          Nunca commite o arquivo <code>google-credentials.json</code> (já está no .gitignore).
         </div>
       </div>
 
@@ -803,24 +883,50 @@ body.compact .flowchart-step { padding: 9px; }
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════
+     MODAL — PERSONAGEM FICTÍCIO
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-staff" onclick="closeIfOverlay(event,'modal-staff')">
+  <div class="modal" style="width:340px">
+    <div class="modal-header">
+      <span class="modal-title" id="staff-modal-title">Personagem</span>
+      <button class="modal-close" onclick="closeModal('modal-staff')">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:24px">
+      <div id="staff-modal-emoji" style="font-size:48px;margin-bottom:12px"></div>
+      <div id="staff-modal-name" style="font-size:16px;font-weight:800;margin-bottom:8px"></div>
+      <div id="staff-modal-bio" style="font-size:13px;color:var(--muted);line-height:1.6"></div>
+    </div>
+  </div>
+</div>
+
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script>
 /* ══════════════════════════════════════════════
    DADOS
 ══════════════════════════════════════════════ */
 const AGENTS = [
-  { id: 'inteligencia-estrategica', name: 'Inteligência\nEstratégica', short: 'Int. Estratégica', emoji: '🔍', color: '#6c63ff', role: 'Pesquisa de mercado → Direcionamentos 3×3 (Estratégico, Tático, Operacional)', skills: ['/pesquisa-mercado', '/direcionamentos-estrategicos'], outputs: ['achados-pesquisa.md', 'deck-executivo.md', 'plano-acoes.md', 'operacional-vendas.md', 'operacional-comunicacao.md', 'operacional-branding.md', 'G1-fluxograma.png'], passesTo: ['diretor-de-marketing'] },
-  { id: 'diretor-de-marketing', name: 'Diretor de\nMarketing', short: 'Diretor Mkt', emoji: '👔', color: '#00d4aa', role: 'CMO — Coordena todos os squads, define estratégia, delega tarefas e consolida resultados', skills: ['Orquestração completa'], outputs: ['plano-campanha.md', 'briefings-time.md'], passesTo: ['content-strategist', 'ads-strategist', 'social-media-manager'] },
-  { id: 'content-strategist', name: 'Content\nStrategist', short: 'Content', emoji: '📋', color: '#f59e0b', role: 'Pilares editoriais · Calendário · Distribuição multi-canal · Repurposing', skills: ['/content-calendar'], outputs: ['pilares-editoriais.md', 'calendario-30d.md', 'fluxo-repurposing.md'], passesTo: ['criador-de-conteudo', 'youtube-specialist'] },
-  { id: 'seo-specialist', name: 'SEO\nSpecialist', short: 'SEO', emoji: '🔎', color: '#22c55e', role: 'SEO técnico · Auditoria · Estratégia orgânica · Search Console', skills: ['/seo-audit'], outputs: ['relatorio-seo.md', 'plano-acao-seo.md'], passesTo: ['criador-de-conteudo'] },
-  { id: 'youtube-specialist', name: 'YouTube\nSpecialist', short: 'YouTube', emoji: '▶', color: '#ef4444', role: 'SEO YouTube · Thumbnails · Análise de retenção · Estratégia de canal', skills: ['/youtube-seo'], outputs: ['roteiro.md', 'metadados-youtube.md', 'thumbnail-brief.md'], passesTo: ['short-video-creator'] },
-  { id: 'short-video-creator', name: 'Short Video\nCreator', short: 'Short Video', emoji: '📱', color: '#ec4899', role: 'TikTok · Reels · YouTube Shorts — roteiros curtos e plano de repurposing', skills: ['/tiktok-strategy', '/video-script'], outputs: ['roteiros-curtos.md', 'plano-repurposing.md'], passesTo: ['social-media-manager'] },
-  { id: 'social-media-manager', name: 'Social Media\nManager', short: 'Social Media', emoji: '📣', color: '#3b82f6', role: 'Estratégia multi-plataforma · Engajamento · Comunidade', skills: ['/instagram-publisher', '/linkedin-creator', '/facebook-strategy'], outputs: ['estrategia-social.md', 'banco-copy.md', 'calendario-social.md'], passesTo: ['growth-hacker'] },
-  { id: 'ads-strategist', name: 'Ads\nStrategist', short: 'Ads', emoji: '📊', color: '#f59e0b', role: 'Meta Ads · YouTube Ads · TikTok Ads — estrutura, copy e plano A/B', skills: ['/facebook-ads', '/youtube-ads', '/tiktok-ads', '/performance-marketing'], outputs: ['estrutura-campanha.md', 'copy-ads.md', 'plano-ab.md'], passesTo: ['analytics-analyst'] },
-  { id: 'analytics-analyst', name: 'Analytics\nAnalyst', short: 'Analytics', emoji: '📈', color: '#00d4aa', role: 'GA4 · Relatórios · Insights de crescimento · Hipóteses de otimização', skills: ['/analytics-report'], outputs: ['relatorio-mensal.md', 'hipoteses.md', 'dashboard.md'], passesTo: ['growth-hacker'] },
-  { id: 'criador-de-conteudo', name: 'Criador de\nConteúdo', short: 'Criador', emoji: '✍', color: '#a78bfa', role: 'Produção multi-formato — Blog, Vídeo, Social, E-mail, Podcast', skills: ['/blog-post', '/white-paper', '/case-study', '/podcast-script'], outputs: ['artigo.md', 'conteudo-social.md', 'roteiro-video.md'], passesTo: ['social-media-manager', 'youtube-specialist'] },
-  { id: 'growth-hacker', name: 'Growth\nHacker', short: 'Growth', emoji: '🚀', color: '#f97316', role: 'Experimentos A/B · Otimização de funil · Hipóteses de crescimento (ICE)', skills: ['/performance-marketing'], outputs: ['hipoteses-ice.md', 'plano-teste.md', 'relatorio-experimento.md'], passesTo: [] },
-  { id: 'meta-orquestrador', name: 'Meta\nOrquestrador', short: 'Meta-Orq', emoji: '🗺', color: '#6c63ff', role: 'Transforma objetivo estratégico em plano cascata — seleciona esteiras, resolve dependências e entrega briefing para execução', skills: ['/estrategia-cascata'], outputs: ['plano-cascata.md'], passesTo: ['diretor-de-marketing'] },
+  { id: 'inteligencia-estrategica', nickname: 'Sherlock', name: 'Inteligência\nEstratégica', short: 'Int. Estratégica', emoji: '🔍', color: '#6c63ff', role: 'Pesquisa de mercado → Direcionamentos 3×3 (Estratégico, Tático, Operacional)', skills: ['/pesquisa-mercado', '/direcionamentos-estrategicos'], outputs: ['achados-pesquisa.md', 'deck-executivo.md', 'plano-acoes.md', 'operacional-vendas.md', 'operacional-comunicacao.md', 'operacional-branding.md', 'G1-fluxograma.png'], passesTo: ['diretor-de-marketing'] },
+  { id: 'diretor-de-marketing', nickname: 'Godão', name: 'Diretor de\nMarketing', short: 'Diretor Mkt', emoji: '👔', color: '#00d4aa', role: 'CMO — Coordena todos os squads, define estratégia, delega tarefas e consolida resultados', skills: ['Orquestração completa'], outputs: ['plano-campanha.md', 'briefings-time.md'], passesTo: ['content-strategist', 'ads-strategist', 'social-media-manager'] },
+  { id: 'content-strategist', nickname: 'A Narradora', name: 'Content\nStrategist', short: 'Content', emoji: '📋', color: '#f59e0b', role: 'Pilares editoriais · Calendário · Distribuição multi-canal · Repurposing', skills: ['/content-calendar'], outputs: ['pilares-editoriais.md', 'calendario-30d.md', 'fluxo-repurposing.md'], passesTo: ['criador-de-conteudo', 'youtube-specialist'] },
+  { id: 'seo-specialist', nickname: 'Google Whisper', name: 'SEO\nSpecialist', short: 'SEO', emoji: '🔎', color: '#22c55e', role: 'SEO técnico · Auditoria · Estratégia orgânica · Search Console', skills: ['/seo-audit'], outputs: ['relatorio-seo.md', 'plano-acao-seo.md'], passesTo: ['criador-de-conteudo'] },
+  { id: 'youtube-specialist', nickname: 'Rei dos Plays', name: 'YouTube\nSpecialist', short: 'YouTube', emoji: '▶', color: '#ef4444', role: 'SEO YouTube · Thumbnails · Análise de retenção · Estratégia de canal', skills: ['/youtube-seo'], outputs: ['roteiro.md', 'metadados-youtube.md', 'thumbnail-brief.md'], passesTo: ['short-video-creator'] },
+  { id: 'short-video-creator', nickname: 'Ninja dos Reels', name: 'Short Video\nCreator', short: 'Short Video', emoji: '📱', color: '#ec4899', role: 'TikTok · Reels · YouTube Shorts — roteiros curtos e plano de repurposing', skills: ['/tiktok-strategy', '/video-script'], outputs: ['roteiros-curtos.md', 'plano-repurposing.md'], passesTo: ['social-media-manager'] },
+  { id: 'social-media-manager', nickname: 'Dona das Redes', name: 'Social Media\nManager', short: 'Social Media', emoji: '📣', color: '#3b82f6', role: 'Estratégia multi-plataforma · Engajamento · Comunidade', skills: ['/instagram-publisher', '/linkedin-creator', '/facebook-strategy'], outputs: ['estrategia-social.md', 'banco-copy.md', 'calendario-social.md'], passesTo: ['growth-hacker'] },
+  { id: 'ads-strategist', nickname: 'Caçador de Cliques', name: 'Ads\nStrategist', short: 'Ads', emoji: '📊', color: '#f59e0b', role: 'Meta Ads · YouTube Ads · TikTok Ads — estrutura, copy e plano A/B', skills: ['/facebook-ads', '/youtube-ads', '/tiktok-ads', '/performance-marketing'], outputs: ['estrutura-campanha.md', 'copy-ads.md', 'plano-ab.md'], passesTo: ['analytics-analyst'] },
+  { id: 'analytics-analyst', nickname: 'Profeta dos Números', name: 'Analytics\nAnalyst', short: 'Analytics', emoji: '📈', color: '#00d4aa', role: 'GA4 · Relatórios · Insights de crescimento · Hipóteses de otimização', skills: ['/analytics-report'], outputs: ['relatorio-mensal.md', 'hipoteses.md', 'dashboard.md'], passesTo: ['growth-hacker'] },
+  { id: 'criador-de-conteudo', nickname: 'A Máquina', name: 'Criador de\nConteúdo', short: 'Criador', emoji: '✍', color: '#a78bfa', role: 'Produção multi-formato — Blog, Vídeo, Social, E-mail, Podcast', skills: ['/blog-post', '/white-paper', '/case-study', '/podcast-script'], outputs: ['artigo.md', 'conteudo-social.md', 'roteiro-video.md'], passesTo: ['social-media-manager', 'youtube-specialist'] },
+  { id: 'growth-hacker', nickname: 'Mago do Crescimento', name: 'Growth\nHacker', short: 'Growth', emoji: '🚀', color: '#f97316', role: 'Experimentos A/B · Otimização de funil · Hipóteses de crescimento (ICE)', skills: ['/performance-marketing'], outputs: ['hipoteses-ice.md', 'plano-teste.md', 'relatorio-experimento.md'], passesTo: [] },
+  { id: 'meta-orquestrador', nickname: 'O Visionário', name: 'Meta\nOrquestrador', short: 'Meta-Orq', emoji: '🗺', color: '#6c63ff', role: 'Transforma objetivo estratégico em plano cascata — seleciona esteiras, resolve dependências e entrega briefing para execução', skills: ['/estrategia-cascata'], outputs: ['plano-cascata.md'], passesTo: ['diretor-de-marketing'] },
+];
+
+const STAFF = [
+  { id: 'bete', nickname: 'Bete das Planilhas', emoji: '🧮', color: '#9ca3af',
+    bio: 'Questiona todo budget e pede aprovação em triplicate. Nunca viu um relatório que não precisava de mais uma coluna. Especialidade: fazer o botão de "enviar" sumir misteriosamente.' },
+  { id: 'geraldo', nickname: 'Seu Geraldo da TI', emoji: '🔧', color: '#6b7280',
+    bio: 'Resolve tudo com "já reiniciou?" e some exatamente às 17h00. Conhece cada cabo do escritório de cor e salteado. Último visto: debaixo da mesa do andar 3.' },
+  { id: 'fernandinho', nickname: 'Fernandinho do Café', emoji: '☕', color: '#d97706',
+    bio: 'Sabe de todos os projetos secretos mas só compartilha depois do terceiro café. Nunca faltou um dia sequer. Suspeita-se que viva aqui dentro.' },
 ];
 
 const ESTEIRAS = [
@@ -1149,13 +1255,12 @@ function showFlowchart(id) {
 
   const body = document.getElementById('flowchart-body');
 
-  if (e.img) {
-    body.innerHTML = `
-      <img src="${e.img}" alt="Fluxograma ${e.id}" style="width:100%;border-radius:8px;margin-bottom:16px" onerror="this.style.display='none'">
-      ${renderSteps(e)}`;
-  } else {
-    body.innerHTML = renderSteps(e);
-  }
+  zoomFlow(0);
+
+  const inner = e.img
+    ? `<img src="${e.img}" alt="Fluxograma ${e.id}" style="width:100%;border-radius:8px;margin-bottom:16px" onerror="this.style.display='none'">${renderSteps(e)}`
+    : renderSteps(e);
+  body.innerHTML = `<div id="flowchart-zoom-wrap">${inner}</div>`;
 
   openModal('modal-flowchart');
 }
@@ -1179,37 +1284,169 @@ function renderSteps(e) {
    OFFICE
 ══════════════════════════════════════════════ */
 function buildOffice() {
-  const container = document.getElementById('agents-container');
-  AGENTS.forEach(a => {
-    const desk = document.createElement('div');
-    desk.className = 'agent-desk';
-    desk.id = 'desk-' + a.id;
-    desk.onclick = () => showAgent(a.id);
-    desk.innerHTML = `
-      <div class="speech-bubble">${a.short} — clique para detalhes</div>
-      <div class="agent-figure">
-        <div class="agent-head" style="background:${a.color}20;border-color:${a.color}50">
-          ${a.emoji}
-          <div class="status-dot"></div>
+  const section = document.getElementById('org-section');
+  section.innerHTML = '';
+
+  const floors = [
+    { label: '— CEO —', ids: ['meta-orquestrador'] },
+    { label: '— Diretoria —', ids: ['diretor-de-marketing', 'inteligencia-estrategica'] },
+    { label: '— Coordenação —', ids: ['content-strategist', 'ads-strategist', 'analytics-analyst'], staff: ['bete'] },
+    { label: '— Especialistas —', ids: ['seo-specialist', 'criador-de-conteudo', 'youtube-specialist', 'short-video-creator', 'social-media-manager', 'growth-hacker'], staff: ['geraldo', 'fernandinho'] },
+  ];
+
+  floors.forEach((floor, fi) => {
+    if (fi > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'org-connector';
+      section.appendChild(conn);
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'org-floor-wrap';
+
+    const label = document.createElement('div');
+    label.className = 'org-label';
+    label.textContent = floor.label;
+    wrap.appendChild(label);
+
+    const row = document.createElement('div');
+    row.className = 'org-floor';
+
+    floor.ids.forEach(id => {
+      const a = AGENTS.find(x => x.id === id);
+      if (!a) return;
+      const deskWrap = document.createElement('div');
+      deskWrap.className = 'desk-wrap';
+      deskWrap.setAttribute('data-agent', id);
+      deskWrap.innerHTML = `
+        <div class="agent-bubble" id="bubble-${id}">💤</div>
+        <div class="agent-desk" id="desk-${id}" onclick="showAgent('${id}')">
+          <div class="speech-bubble">${a.nickname || a.short}</div>
+          <div class="agent-figure">
+            <div class="agent-head" style="background:${a.color}20;border-color:${a.color}50">
+              ${a.emoji}<div class="status-dot"></div>
+            </div>
+            <div class="agent-body" style="border-color:${a.color}30"></div>
+            <div class="agent-chair"></div>
+          </div>
+          <div class="desk-surface">
+            <div class="desk-monitor">💻</div>
+            <div class="desk-papers"><div class="desk-paper"></div><div class="desk-paper"></div></div>
+            <div class="desk-inbox" title="Inbox">📥</div>
+          </div>
+          <div class="desk-legs"><div class="desk-leg"></div><div class="desk-leg"></div></div>
+          <div class="agent-name-tag" style="color:${a.color}">${a.nickname || a.short}</div>
+        </div>`;
+      row.appendChild(deskWrap);
+    });
+
+    (floor.staff || []).forEach(sid => {
+      const s = STAFF.find(x => x.id === sid);
+      if (!s) return;
+      const sd = document.createElement('div');
+      sd.className = 'staff-desk';
+      sd.onclick = () => showStaff(sid);
+      sd.innerHTML = `
+        <div class="agent-figure">
+          <div class="agent-head" style="background:${s.color}20;border-color:${s.color}50;font-size:16px">${s.emoji}</div>
+          <div class="agent-body" style="border-color:${s.color}30"></div>
+          <div class="agent-chair"></div>
         </div>
-        <div class="agent-body" style="border-color:${a.color}30"></div>
-        <div class="agent-chair"></div>
-      </div>
-      <div class="desk-surface">
-        <div class="desk-monitor">💻</div>
-        <div class="desk-papers">
-          <div class="desk-paper"></div>
-          <div class="desk-paper"></div>
+        <div class="desk-surface">
+          <div class="desk-monitor">💻</div>
+          <div class="desk-papers"><div class="desk-paper"></div><div class="desk-paper"></div></div>
         </div>
-        <div class="desk-inbox" title="Inbox">📥</div>
-      </div>
-      <div class="desk-legs">
-        <div class="desk-leg"></div>
-        <div class="desk-leg"></div>
-      </div>
-      <div class="agent-name-tag">${a.short}</div>`;
-    container.appendChild(desk);
+        <div class="desk-legs"><div class="desk-leg"></div><div class="desk-leg"></div></div>
+        <div class="agent-name-tag" style="color:${s.color};font-size:8px">${s.nickname}</div>`;
+      row.appendChild(sd);
+    });
+
+    wrap.appendChild(row);
+    section.appendChild(wrap);
   });
+}
+
+function showStaff(id) {
+  const s = STAFF.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('staff-modal-title').textContent = s.nickname;
+  document.getElementById('staff-modal-emoji').textContent = s.emoji;
+  document.getElementById('staff-modal-name').textContent = s.nickname;
+  document.getElementById('staff-modal-bio').textContent = s.bio;
+  openModal('modal-staff');
+}
+
+/* ── AGENT STATUS BUBBLES (inspired by claude-office) ── */
+function setAgentState(agentId, state, text) {
+  const bubble = document.getElementById('bubble-' + agentId);
+  if (!bubble) return;
+  const icons = { idle: '💤', thinking: '⚙️ ...', active: '💬', done: '✅' };
+  bubble.className = 'agent-bubble visible ' + state;
+  bubble.textContent = text || icons[state] || '';
+}
+
+function resetAllAgentStates() {
+  AGENTS.forEach(a => {
+    const bubble = document.getElementById('bubble-' + a.id);
+    if (bubble) { bubble.className = 'agent-bubble'; bubble.textContent = '💤'; }
+  });
+}
+
+/* ── INTERN ANIMATION (event-driven) ── */
+function animateIntern(fromId, toId, label) {
+  const intern = document.getElementById('intern');
+  const office = document.getElementById('panel-office');
+  if (!intern || !office) return;
+
+  const getX = id => {
+    const el = document.getElementById('desk-' + id);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const o = office.getBoundingClientRect();
+    return r.left - o.left + r.width / 2 - 12;
+  };
+
+  const fromX = getX(fromId);
+  const toX = getX(toId);
+  if (fromX === null || toX === null) return;
+
+  intern.style.transition = 'none';
+  intern.style.left = fromX + 'px';
+  intern.style.transform = 'scaleX(1)';
+  intern.classList.add('intern-active');
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    intern.style.transition = 'left 1.4s ease-in-out, opacity .3s, transform .15s';
+    intern.style.left = toX + 'px';
+    intern.style.transform = toX < fromX ? 'scaleX(-1)' : 'scaleX(1)';
+  }));
+
+  const bubble = intern.querySelector('.intern-bubble');
+  if (bubble) { bubble.textContent = '📦 ' + (label || 'dados'); bubble.style.opacity = '1'; }
+
+  setTimeout(() => {
+    if (bubble) { bubble.textContent = '✅ Entregue'; }
+    setAgentState(toId, 'done');
+    setTimeout(() => {
+      intern.classList.remove('intern-active');
+      intern.style.transition = 'none';
+      if (bubble) bubble.style.opacity = '';
+      setTimeout(() => { setAgentState(toId, 'idle'); }, 2000);
+    }, 1000);
+  }, 1500);
+}
+
+/* ── ZOOM FLOWCHART ── */
+let _flowZoom = 1;
+function zoomFlow(delta) {
+  _flowZoom = delta === 0 ? 1 : Math.max(0.4, Math.min(3, _flowZoom + delta));
+  const wrap = document.getElementById('flowchart-zoom-wrap');
+  if (wrap) {
+    wrap.style.transform = `scale(${_flowZoom})`;
+    wrap.style.transformOrigin = 'top center';
+  }
+  const pct = document.getElementById('zoom-pct');
+  if (pct) pct.textContent = Math.round(_flowZoom * 100) + '%';
 }
 
 /* ══════════════════════════════════════════════
@@ -1303,6 +1540,8 @@ function setActiveAgent(id) {
     document.getElementById('chat-agent-label').textContent = a.name.replace('\n', ' ');
     document.getElementById('agent-select').value = id;
     addSystemMessage(`Agente alterado para ${a.emoji} ${a.name.replace('\n', ' ')}`);
+    resetAllAgentStates();
+    setAgentState(id, 'active', '💬 ativo');
   }
 }
 
@@ -1340,6 +1579,7 @@ async function sendMessage() {
   const a = AGENTS.find(x => x.id === State.activeAgent);
   const systemPrompt = buildSystemPrompt(a);
 
+  setAgentState(State.activeAgent, 'thinking');
   showTyping();
 
   try {
@@ -1376,11 +1616,20 @@ async function sendMessage() {
     addMessage('assistant', reply);
     State.messages.push({ role: 'user', content: fullText }, { role: 'assistant', content: reply });
 
+    const snippet = reply.replace(/[#*`\n]/g, ' ').trim().slice(0, 38);
+    setAgentState(State.activeAgent, 'active', '💬 ' + snippet);
+
+    const nextAgent = a && a.passesTo && a.passesTo[0];
+    if (nextAgent) {
+      setTimeout(() => animateIntern(State.activeAgent, nextAgent, 'dados.md'), 400);
+    }
+
     detectAndAddDeliverables(reply);
     if (State.features.sheetsAuto && State.sheetId && State.sheetsToken) saveToSheets();
 
   } catch (err) {
     hideTyping();
+    setAgentState(State.activeAgent, 'idle');
     addMessage('assistant', `❌ Erro: ${err.message}`);
   }
 }
@@ -1552,13 +1801,18 @@ function saveSettings() {
   State.sheetId = document.getElementById('cfg-sheetid').value.trim();
   State.produto = document.getElementById('cfg-produto').value.trim();
   State.icp = document.getElementById('cfg-icp').value.trim();
+  State.ga4Id = document.getElementById('cfg-ga4id').value.trim();
+  State.ga4Mid = document.getElementById('cfg-ga4mid').value.trim();
+  State.gsc = document.getElementById('cfg-gsc').value.trim();
+  State.saEmail = document.getElementById('cfg-sa-email').value.trim();
   State.features.office = document.getElementById('feat-office').checked;
   State.features.sheetsAuto = document.getElementById('feat-sheets-auto').checked;
   State.features.compact = document.getElementById('feat-compact').checked;
   State.features.cache = document.getElementById('feat-cache').checked;
   localStorage.setItem('mkt-cfg', JSON.stringify({
     apiKey: State.apiKey, clientId: State.clientId, sheetId: State.sheetId,
-    produto: State.produto, icp: State.icp, features: State.features
+    produto: State.produto, icp: State.icp, features: State.features,
+    ga4Id: State.ga4Id, ga4Mid: State.ga4Mid, gsc: State.gsc, saEmail: State.saEmail,
   }));
   applyFeatures();
   updateBadges();
@@ -1574,6 +1828,10 @@ function loadSettings() {
     State.sheetId = cfg.sheetId || '';
     State.produto = cfg.produto || '';
     State.icp = cfg.icp || '';
+    State.ga4Id = cfg.ga4Id || '';
+    State.ga4Mid = cfg.ga4Mid || '';
+    State.gsc = cfg.gsc || '';
+    State.saEmail = cfg.saEmail || '';
     if (cfg.features) Object.assign(State.features, cfg.features);
     const hidden = JSON.parse(localStorage.getItem('mkt-hidden') || '[]');
     State.hiddenEsteiras = new Set(hidden);
@@ -1597,6 +1855,10 @@ function openSettings() {
   document.getElementById('cfg-sheetid').value = State.sheetId;
   document.getElementById('cfg-produto').value = State.produto;
   document.getElementById('cfg-icp').value = State.icp;
+  document.getElementById('cfg-ga4id').value = State.ga4Id || '';
+  document.getElementById('cfg-ga4mid').value = State.ga4Mid || '';
+  document.getElementById('cfg-gsc').value = State.gsc || '';
+  document.getElementById('cfg-sa-email').value = State.saEmail || '';
   applyFeatures();
   openModal('modal-settings');
 }
@@ -1675,9 +1937,14 @@ function escapeHtml(t) {
 ══════════════════════════════════════════════ */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    ['modal-flowchart','modal-agent','modal-settings','modal-intern','modal-manage'].forEach(closeModal);
+    ['modal-flowchart','modal-agent','modal-settings','modal-intern','modal-manage','modal-staff'].forEach(closeModal);
   }
 });
+
+document.getElementById('flowchart-body').addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomFlow(e.deltaY < 0 ? 0.1 : -0.1);
+}, { passive: false });
 
 init();
 </script>
