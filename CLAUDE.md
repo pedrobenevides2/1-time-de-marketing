@@ -18,9 +18,9 @@ meta-orquestrador (agente Opus — transforma ideia em plano cascata)
          ↓
 diretor-de-marketing (agente Opus — CMO, coordena squads)
          ↓
-Squads 1-5 (10 agentes especializados)
+Squads 1-5 (9 agentes especializados) + inteligencia-estrategica (Opus)
          ↓
-32 Skills (outputs pontuais e padronizados)
+33 Skills (outputs pontuais e padronizados)
 ```
 
 **Quando usar cada camada:**
@@ -32,11 +32,11 @@ Squads 1-5 (10 agentes especializados)
 
 ## Sistema de Esteiras (`.claude/catalogo/`)
 
-O catálogo em `.claude/catalogo/` define os 24 serviços oferecidos e os pipelines de execução:
+O catálogo em `.claude/catalogo/` define os 27 serviços oferecidos e os pipelines de execução:
 
 ```
 .claude/catalogo/
-├── servicos.md       ← 24 serviços com IDs (A1-F4), pré-requisitos e tempo
+├── servicos.md       ← 27 serviços com IDs (G1, A1-F4), pré-requisitos e tempo
 ├── README.md         ← grafo de dependências e referência de agentes/skills
 ├── PROGRESSO.md      ← rastreamento de implementação
 └── esteiras/         ← pipeline passo a passo por serviço
@@ -59,12 +59,13 @@ O catálogo em `.claude/catalogo/` define os 24 serviços oferecidos e os pipeli
 - E4 (Landing Page) deve existir antes de rodar ads (E1-E3)
 - F1 (Relatório) deve existir antes de F3 (Experimento)
 
-## Agentes (10)
+## Agentes (12)
 
 | Agente | Squad | Modelo |
 |--------|-------|--------|
-| `diretor-de-marketing` | Orquestração | claude-opus-4-7 |
 | `meta-orquestrador` | Meta-estratégia | claude-opus-4-7 |
+| `diretor-de-marketing` | Orquestração | claude-opus-4-7 |
+| `inteligencia-estrategica` | Inteligência | claude-opus-4-7 |
 | `content-strategist` | Conteúdo | claude-sonnet-4-6 |
 | `seo-specialist` | Conteúdo | claude-sonnet-4-6 |
 | `criador-de-conteudo` | Conteúdo | claude-sonnet-4-6 |
@@ -75,9 +76,9 @@ O catálogo em `.claude/catalogo/` define os 24 serviços oferecidos e os pipeli
 | `growth-hacker` | Ads/Growth | claude-sonnet-4-6 |
 | `analytics-analyst` | Analytics | claude-sonnet-4-6 |
 
-## Skills (32)
+## Skills (33)
 
-Estratégia: `/icp-persona` `/posicionamento` `/content-calendar` `/produto-gtm`
+Estratégia: `/estrategia-cascata` `/icp-persona` `/posicionamento` `/content-calendar` `/produto-gtm` `/pesquisa-mercado` `/direcionamentos-estrategicos`
 
 Conteúdo longo: `/blog-post` `/white-paper` `/case-study` `/ebook-outline` `/webinar-script` `/podcast-script` `/infographic-brief`
 

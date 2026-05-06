@@ -459,6 +459,51 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 /* ── UTIL ──────────────────────────────────────────── */
 .hidden { display: none !important; }
 .separator { height: 1px; background: var(--border); }
+
+/* ── CATEGORY FILTER ─────────────────────────────── */
+.cat-filters { display: flex; gap: 4px; flex-wrap: wrap; }
+.cat-btn {
+  padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700;
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+  cursor: pointer; transition: all .15s; letter-spacing: .04em;
+}
+.cat-btn:hover { color: var(--text); border-color: var(--purple); }
+.cat-btn.cat-active { background: var(--purple); color: #fff; border-color: var(--purple); }
+.proc-icon.proc-faded { opacity: .25; pointer-events: none; }
+.proc-icon .icon-toggle {
+  position: absolute; top: 3px; right: 3px;
+  font-size: 8px; color: var(--muted); opacity: 0;
+  transition: opacity .15s;
+}
+.proc-icon:hover .icon-toggle { opacity: 1; }
+
+/* ── FEATURE TOGGLE ──────────────────────────────── */
+.feature-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.feature-row:last-child { border-bottom: none; }
+.feature-label { font-size: 12px; color: var(--text); }
+.feature-sub { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
+.toggle-sw { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+.toggle-sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
+  cursor: pointer; transition: .2s;
+}
+.toggle-track:before {
+  content: ''; position: absolute;
+  width: 14px; height: 14px; left: 2px; top: 2px;
+  background: var(--muted); border-radius: 50%; transition: .2s;
+}
+.toggle-sw input:checked + .toggle-track { background: var(--purple); border-color: var(--purple); }
+.toggle-sw input:checked + .toggle-track:before { transform: translateX(16px); background: #fff; }
+
+/* ── COMPACT MODE ─────────────────────────────────── */
+body.compact .msg-bubble { font-size: 12px; }
+body.compact .chat-agent-bar { padding: 5px 10px; }
+body.compact #panel-controls { padding: 8px 12px; gap: 6px; }
+body.compact .proc-icon { width: 60px; padding: 5px 3px; }
+body.compact .proc-icon .icon-emoji { font-size: 15px; }
+body.compact .flowchart-step { padding: 9px; }
 </style>
 </head>
 <body>
@@ -480,6 +525,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
   <div class="ctrl-row">
     <span class="ctrl-label">Agente ativo</span>
     <select class="ctrl-select" id="agent-select" onchange="setActiveAgent(this.value)">
+      <option value="meta-orquestrador">🗺 Meta-Orquestrador</option>
       <option value="diretor-de-marketing">👔 Diretor de Marketing</option>
       <option value="inteligencia-estrategica">🔍 Inteligência Estratégica</option>
       <option value="content-strategist">📋 Content Strategist</option>
@@ -525,6 +571,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
     <span class="proc-title">📌 Esteiras de Processo</span>
     <span style="font-size:10px;color:var(--muted)" id="proc-count"></span>
   </div>
+  <div class="cat-filters" id="cat-filters"></div>
   <div class="proc-grid" id="proc-grid"></div>
 </div>
 
@@ -672,6 +719,52 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
         </div>
       </div>
 
+      <div class="settings-divider"></div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">🧩 Funcionalidades</div>
+        <div class="feature-row">
+          <div>
+            <span class="feature-label">Escritório animado</span>
+            <span class="feature-sub">Painel visual com agentes nas mesas</span>
+          </div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="feat-office" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="feature-row">
+          <div>
+            <span class="feature-label">Salvar no Sheets automaticamente</span>
+            <span class="feature-sub">Registra cada resposta recebida no Google Sheets</span>
+          </div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="feat-sheets-auto">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="feature-row">
+          <div>
+            <span class="feature-label">Modo compacto</span>
+            <span class="feature-sub">Menos espaçamento para mais conteúdo visível</span>
+          </div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="feat-compact">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="feature-row">
+          <div>
+            <span class="feature-label">Prompt caching (Anthropic)</span>
+            <span class="feature-sub">Reduz tokens em conversas longas (recomendado)</span>
+          </div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="feat-cache" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
       <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="saveSettings()">💾 Salvar Configurações</button>
     </div>
   </div>
@@ -712,6 +805,7 @@ const AGENTS = [
   { id: 'analytics-analyst', name: 'Analytics\nAnalyst', short: 'Analytics', emoji: '📈', color: '#00d4aa', role: 'GA4 · Relatórios · Insights de crescimento · Hipóteses de otimização', skills: ['/analytics-report'], outputs: ['relatorio-mensal.md', 'hipoteses.md', 'dashboard.md'], passesTo: ['growth-hacker'] },
   { id: 'criador-de-conteudo', name: 'Criador de\nConteúdo', short: 'Criador', emoji: '✍', color: '#a78bfa', role: 'Produção multi-formato — Blog, Vídeo, Social, E-mail, Podcast', skills: ['/blog-post', '/white-paper', '/case-study', '/podcast-script'], outputs: ['artigo.md', 'conteudo-social.md', 'roteiro-video.md'], passesTo: ['social-media-manager', 'youtube-specialist'] },
   { id: 'growth-hacker', name: 'Growth\nHacker', short: 'Growth', emoji: '🚀', color: '#f97316', role: 'Experimentos A/B · Otimização de funil · Hipóteses de crescimento (ICE)', skills: ['/performance-marketing'], outputs: ['hipoteses-ice.md', 'plano-teste.md', 'relatorio-experimento.md'], passesTo: [] },
+  { id: 'meta-orquestrador', name: 'Meta\nOrquestrador', short: 'Meta-Orq', emoji: '🗺', color: '#6c63ff', role: 'Transforma objetivo estratégico em plano cascata — seleciona esteiras, resolve dependências e entrega briefing para execução', skills: ['/estrategia-cascata'], outputs: ['plano-cascata.md'], passesTo: ['diretor-de-marketing'] },
 ];
 
 const ESTEIRAS = [
@@ -774,6 +868,77 @@ const ESTEIRAS = [
     { title: 'analytics-analyst', desc: 'Coleta de métricas GA4, YouTube, Social', out: [] },
     { title: '/analytics-report', desc: 'Relatório consolidado + insights', out: ['relatorio-mensal.md'] },
   ]},
+  { id: 'B3', name: 'Conteúdo Rico', icon: '📚', color: '#f59e0b', desc: 'Ebook / White Paper / Case Study + landing de captura', steps: [
+    { title: 'seo-specialist', desc: 'Keywords, gaps e títulos de topo de funil', out: [] },
+    { title: '/ebook-outline ou /white-paper ou /case-study', desc: 'Conteúdo rico completo conforme formato', out: ['conteudo-rico.md'] },
+    { title: '/landing-page', desc: 'Copy da landing de captura', out: ['landing-captura.md'] },
+  ]},
+  { id: 'B4', name: 'Podcast & Webinar', icon: '🎙', color: '#f59e0b', desc: 'Roteiro de episódio completo + metadados YouTube', steps: [
+    { title: 'content-strategist', desc: 'Ângulo único e estrutura do episódio', out: [] },
+    { title: '/podcast-script ou /webinar-script', desc: 'Roteiro completo com blocos e CTA', out: ['roteiro-podcast.md'] },
+    { title: '/youtube-seo', desc: 'Título, descrição e tags', out: ['metadados-youtube.md'] },
+  ]},
+  { id: 'B5', name: 'Infográfico', icon: '🖼', color: '#f59e0b', desc: 'Briefing visual completo para Canva', steps: [
+    { title: '/scraping', desc: 'Coleta de dados e estatísticas', out: ['dados-coletados.md'] },
+    { title: '/infographic-brief', desc: 'Briefing: hierarquia, copy e cores', out: ['brief-infografico.md'] },
+    { title: '/diagrama', desc: 'Diagrama Mermaid do fluxo', out: ['diagrama-processo.md'] },
+  ]},
+  { id: 'C3', name: 'Auditoria YouTube', icon: '🎬', color: '#ef4444', desc: 'Diagnóstico completo de canal + plano 3 fases', steps: [
+    { title: 'youtube-specialist', desc: 'Diagnóstico CTR, retenção, thumbnails e títulos', out: ['relatorio-canal.md'] },
+    { title: '/seo-audit', desc: 'Gaps de keyword, tags e capítulos', out: ['auditoria-seo-youtube.md'] },
+    { title: 'youtube-specialist', desc: 'Plano: quick wins, médio e longo prazo', out: ['plano-otimizacao-canal.md'] },
+  ]},
+  { id: 'D2', name: 'Instagram', icon: '📸', color: '#ec4899', desc: 'Legenda + carrossel + roteiro Reels', steps: [
+    { title: '/instagram-publisher', desc: 'Legenda, carrossel e roteiro Reels', out: ['legenda.md','carrossel.md','roteiro-reels.md'] },
+    { title: '/copy-anatomy', desc: 'Versão otimizada com frameworks de copy', out: [] },
+  ]},
+  { id: 'D3', name: 'LinkedIn', icon: '💼', color: '#3b82f6', desc: 'Post + carrossel + artigo profissional', steps: [
+    { title: '/linkedin-creator', desc: 'Post, carrossel e artigo LinkedIn', out: ['post-linkedin.md','carrossel-linkedin.md','artigo-linkedin.md'] },
+    { title: '/copy-anatomy', desc: 'Hook forte, proof points e CTA', out: [] },
+  ]},
+  { id: 'D4', name: 'Facebook', icon: '👥', color: '#3b82f6', desc: 'Posts + estratégia de grupos Facebook', steps: [
+    { title: '/facebook-strategy', desc: 'Posts, eventos e estratégia de grupos', out: ['posts-facebook.md'] },
+    { title: 'social-media-manager', desc: 'Plano de comunidade e frequência', out: ['estrategia-grupos.md'] },
+  ]},
+  { id: 'D5', name: 'Influenciadores', icon: '⭐', color: '#f59e0b', desc: 'Lista priorizada + proposta de parceria', steps: [
+    { title: '/scraping', desc: 'Lista de influenciadores com engajamento', out: [] },
+    { title: '/influencer-outreach', desc: 'Lista priorizada, templates e proposta', out: ['lista-influenciadores.md','template-contato.md','proposta-parceria.md'] },
+    { title: 'social-media-manager', desc: 'Briefing criativo e fluxo de aprovação', out: ['briefing-criativo.md'] },
+  ]},
+  { id: 'D6', name: 'Engajamento', icon: '💬', color: '#3b82f6', desc: 'Templates de resposta + playbook de crise', steps: [
+    { title: '/community-engagement', desc: 'Templates de resposta e playbook de crise', out: ['templates-resposta.md','playbook-crise.md','estrategia-ugc.md'] },
+    { title: 'social-media-manager', desc: 'SLA, triagem e ferramentas de gestão', out: ['processos-engajamento.md'] },
+  ]},
+  { id: 'E2', name: 'YouTube Ads', icon: '🎥', color: '#f97316', desc: 'Scripts 5s + segmentação + checklist YouTube Ads', steps: [
+    { title: 'ads-strategist', desc: 'Estrutura de campanha e segmentação', out: ['estrutura-youtube-ads.md'] },
+    { title: '/youtube-ads', desc: '3 variações de script 5s + anúncio completo', out: ['scripts-youtube-ads.md'] },
+    { title: 'analytics-analyst', desc: 'Framework de monitoramento e A/B', out: [] },
+  ]},
+  { id: 'E3', name: 'TikTok Ads', icon: '🎭', color: '#f97316', desc: '3-5 criativos + roteiros estilo nativo TikTok', steps: [
+    { title: 'ads-strategist', desc: 'Estrutura: objetivo, tipo e segmentação', out: ['estrutura-tiktok-ads.md'] },
+    { title: '/tiktok-ads', desc: '3-5 criativos com copy, narração e CTA', out: ['criativos-tiktok.md'] },
+    { title: 'short-video-creator', desc: 'Roteiros estilo orgânico TikTok', out: ['roteiros-nativos.md'] },
+  ]},
+  { id: 'E5', name: 'Performance', icon: '📈', color: '#22c55e', desc: 'Auditoria de ads ativos + plano de otimização', steps: [
+    { title: 'ads-strategist', desc: 'Diagnóstico: o que funciona e gargalos', out: ['auditoria-ads.md'] },
+    { title: '/performance-marketing', desc: 'Plano de ação: pausar, escalar, testar', out: ['plano-otimizacao.md'] },
+    { title: 'analytics-analyst', desc: 'Dashboard de alertas e projeções', out: ['framework-monitoramento.md'] },
+  ]},
+  { id: 'F2', name: 'Auditoria SEO', icon: '🔍', color: '#22c55e', desc: 'SEO técnico + on-page + plano de ação 3 horizontes', steps: [
+    { title: 'seo-specialist', desc: 'Gap de keywords e análise de concorrentes', out: [] },
+    { title: '/seo-audit', desc: 'Auditoria on-page, técnica e Core Web Vitals', out: ['relatorio-seo.md'] },
+    { title: 'seo-specialist', desc: 'Plano 3 horizontes: quick wins → longo prazo', out: ['plano-acao-seo.md'] },
+  ]},
+  { id: 'F3', name: 'Experimento', icon: '🧪', color: '#22c55e', desc: 'Hipóteses ICE + plano A/B + relatório de resultado', steps: [
+    { title: 'growth-hacker', desc: 'Hipóteses priorizadas por ICE score', out: ['hipoteses-ice.md'] },
+    { title: 'growth-hacker', desc: 'Plano A/B: variantes, amostra e duração', out: ['plano-teste.md'] },
+    { title: 'analytics-analyst', desc: 'Resultado: ganhou/perdeu e significância', out: ['relatorio-resultado.md'] },
+  ]},
+  { id: 'F4', name: 'Inteligência Competitiva', icon: '🕵', color: '#22c55e', desc: 'Análise de concorrentes + gaps + mapa visual', steps: [
+    { title: '/scraping', desc: 'Análise: canais, ads, reviews dos concorrentes', out: ['relatorio-concorrentes.md'] },
+    { title: 'analytics-analyst', desc: 'Gaps de mercado, oportunidades e ameaças', out: ['analise-gaps.md'] },
+    { title: '/diagrama', desc: 'Quadrante ou radar comparativo', out: ['mapa-competitivo.md'] },
+  ]},
 ];
 
 /* ══════════════════════════════════════════════
@@ -791,6 +956,9 @@ const State = {
   sheetsToken: null,
   attachedContent: '',
   isTyping: false,
+  activeFilter: 'ALL',
+  hiddenEsteiras: new Set(),
+  features: { office: true, sheetsAuto: false, compact: false, cache: true },
 };
 
 /* ══════════════════════════════════════════════
@@ -798,11 +966,74 @@ const State = {
 ══════════════════════════════════════════════ */
 function init() {
   loadSettings();
+  buildCatFilters();
   buildProcGrid();
   buildOffice();
   buildEsteiraSelect();
   updateBadges();
+  applyFeatures();
   document.getElementById('current-origin').textContent = location.origin || 'file://';
+}
+
+/* ══════════════════════════════════════════════
+   CATEGORY FILTERS
+══════════════════════════════════════════════ */
+const CATEGORIES = [
+  { key: 'ALL', label: 'Todas' },
+  { key: 'G', label: 'G — Inteligência' },
+  { key: 'A', label: 'A — Fundação' },
+  { key: 'B', label: 'B — Conteúdo' },
+  { key: 'C', label: 'C — Vídeo' },
+  { key: 'D', label: 'D — Social' },
+  { key: 'E', label: 'E — Ads' },
+  { key: 'F', label: 'F — Analytics' },
+];
+
+function buildCatFilters() {
+  const cont = document.getElementById('cat-filters');
+  cont.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (State.activeFilter === c.key ? ' cat-active' : '');
+    btn.textContent = c.label;
+    btn.onclick = () => filterByCategory(c.key);
+    cont.appendChild(btn);
+  });
+}
+
+function filterByCategory(cat) {
+  State.activeFilter = cat;
+  document.querySelectorAll('.cat-btn').forEach((b, i) => {
+    b.classList.toggle('cat-active', CATEGORIES[i].key === cat);
+  });
+  document.querySelectorAll('.proc-icon[data-id]').forEach(el => {
+    const id = el.dataset.id;
+    const matchesCat = cat === 'ALL' || id.startsWith(cat);
+    const isHidden = State.hiddenEsteiras.has(id);
+    el.style.display = (matchesCat && !isHidden) ? '' : 'none';
+  });
+  updateProcCount();
+}
+
+function toggleEsteira(id, event) {
+  event.stopPropagation();
+  if (State.hiddenEsteiras.has(id)) {
+    State.hiddenEsteiras.delete(id);
+  } else {
+    State.hiddenEsteiras.add(id);
+  }
+  saveHiddenEsteiras();
+  filterByCategory(State.activeFilter);
+}
+
+function saveHiddenEsteiras() {
+  localStorage.setItem('mkt-hidden', JSON.stringify([...State.hiddenEsteiras]));
+}
+
+function updateProcCount() {
+  const visible = document.querySelectorAll('.proc-icon[data-id]:not([style*="display: none"])').length;
+  const total = ESTEIRAS.length;
+  document.getElementById('proc-count').textContent = `${visible}/${total} processos`;
 }
 
 /* ══════════════════════════════════════════════
@@ -812,22 +1043,28 @@ function buildProcGrid() {
   const grid = document.getElementById('proc-grid');
   grid.innerHTML = '';
   ESTEIRAS.forEach(e => {
+    const isHidden = State.hiddenEsteiras.has(e.id);
     const el = document.createElement('div');
-    el.className = 'proc-icon';
+    el.className = 'proc-icon' + (isHidden ? ' proc-faded' : '');
     el.id = 'proc-' + e.id;
+    el.dataset.id = e.id;
+    el.style.position = 'relative';
     el.innerHTML = `
       <span class="icon-emoji">${e.icon}</span>
       <span class="icon-id" style="color:${e.color}">${e.id}</span>
-      <span class="icon-name">${e.name}</span>`;
-    el.onclick = () => showFlowchart(e.id);
+      <span class="icon-name">${e.name}</span>
+      <span class="icon-toggle" title="${isHidden ? 'Ativar' : 'Desativar'}" onclick="toggleEsteira('${e.id}',event)">${isHidden ? '👁' : '⊘'}</span>`;
+    el.onclick = () => { if (!State.hiddenEsteiras.has(e.id)) showFlowchart(e.id); };
+    if (!isHidden) el.style.display = '';
     grid.appendChild(el);
   });
-  document.getElementById('proc-count').textContent = `${ESTEIRAS.length} processos`;
+  updateProcCount();
 }
 
 function buildEsteiraSelect() {
   const sel = document.getElementById('esteira-select');
   ESTEIRAS.forEach(e => {
+    if (State.hiddenEsteiras.has(e.id)) return;
     const opt = document.createElement('option');
     opt.value = e.id;
     opt.textContent = `${e.icon} ${e.id} — ${e.name}`;
@@ -1051,12 +1288,14 @@ async function sendMessage() {
         'Content-Type': 'application/json',
         'x-api-key': State.apiKey,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31',
+        ...(State.features.cache ? { 'anthropic-beta': 'prompt-caching-2024-07-31' } : {}),
       },
       body: JSON.stringify({
         model: 'claude-opus-4-7',
         max_tokens: 4096,
-        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+        system: State.features.cache
+          ? [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }]
+          : systemPrompt,
         messages: [
           ...State.messages.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content })),
           { role: 'user', content: fullText }
@@ -1077,7 +1316,7 @@ async function sendMessage() {
     State.messages.push({ role: 'user', content: fullText }, { role: 'assistant', content: reply });
 
     detectAndAddDeliverables(reply);
-    if (State.sheetId && State.sheetsToken) saveToSheets();
+    if (State.features.sheetsAuto && State.sheetId && State.sheetsToken) saveToSheets();
 
   } catch (err) {
     hideTyping();
@@ -1246,22 +1485,21 @@ function dropFile(e) {
 /* ══════════════════════════════════════════════
    SETTINGS
 ══════════════════════════════════════════════ */
-function openSettings() {
-  document.getElementById('cfg-apikey').value = State.apiKey;
-  document.getElementById('cfg-gclientid').value = State.clientId;
-  document.getElementById('cfg-sheetid').value = State.sheetId;
-  document.getElementById('cfg-produto').value = State.produto;
-  document.getElementById('cfg-icp').value = State.icp;
-  openModal('modal-settings');
-}
-
 function saveSettings() {
   State.apiKey = document.getElementById('cfg-apikey').value.trim();
   State.clientId = document.getElementById('cfg-gclientid').value.trim();
   State.sheetId = document.getElementById('cfg-sheetid').value.trim();
   State.produto = document.getElementById('cfg-produto').value.trim();
   State.icp = document.getElementById('cfg-icp').value.trim();
-  localStorage.setItem('mkt-cfg', JSON.stringify({ apiKey: State.apiKey, clientId: State.clientId, sheetId: State.sheetId, produto: State.produto, icp: State.icp }));
+  State.features.office = document.getElementById('feat-office').checked;
+  State.features.sheetsAuto = document.getElementById('feat-sheets-auto').checked;
+  State.features.compact = document.getElementById('feat-compact').checked;
+  State.features.cache = document.getElementById('feat-cache').checked;
+  localStorage.setItem('mkt-cfg', JSON.stringify({
+    apiKey: State.apiKey, clientId: State.clientId, sheetId: State.sheetId,
+    produto: State.produto, icp: State.icp, features: State.features
+  }));
+  applyFeatures();
   updateBadges();
   closeModal('modal-settings');
   addSystemMessage('Configurações salvas.');
@@ -1275,7 +1513,31 @@ function loadSettings() {
     State.sheetId = cfg.sheetId || '';
     State.produto = cfg.produto || '';
     State.icp = cfg.icp || '';
+    if (cfg.features) Object.assign(State.features, cfg.features);
+    const hidden = JSON.parse(localStorage.getItem('mkt-hidden') || '[]');
+    State.hiddenEsteiras = new Set(hidden);
   } catch(e) {}
+}
+
+function applyFeatures() {
+  const officePanel = document.getElementById('panel-office');
+  if (officePanel) officePanel.style.display = State.features.office ? '' : 'none';
+  document.body.classList.toggle('compact', State.features.compact);
+  const el = id => document.getElementById(id);
+  if (el('feat-office')) el('feat-office').checked = State.features.office;
+  if (el('feat-sheets-auto')) el('feat-sheets-auto').checked = State.features.sheetsAuto;
+  if (el('feat-compact')) el('feat-compact').checked = State.features.compact;
+  if (el('feat-cache')) el('feat-cache').checked = State.features.cache;
+}
+
+function openSettings() {
+  document.getElementById('cfg-apikey').value = State.apiKey;
+  document.getElementById('cfg-gclientid').value = State.clientId;
+  document.getElementById('cfg-sheetid').value = State.sheetId;
+  document.getElementById('cfg-produto').value = State.produto;
+  document.getElementById('cfg-icp').value = State.icp;
+  applyFeatures();
+  openModal('modal-settings');
 }
 
 function updateBadges() {

@@ -4,7 +4,7 @@ Este diretório contém o catálogo de serviços e as esteiras de processo do ti
 
 ## Como usar este catálogo
 
-1. Leia `servicos.md` para ver todos os 24 serviços disponíveis com IDs e pré-requisitos
+1. Leia `servicos.md` para ver todos os 27 serviços disponíveis com IDs e pré-requisitos
 2. Identifique quais serviços são necessários para a ideia estratégica do usuário
 3. Leia os arquivos de esteira correspondentes em `esteiras/` para detalhar cada pipeline
 4. Monte o plano cascata em blocos (respeitando dependências)
@@ -70,6 +70,7 @@ Cada arquivo segue esta estrutura:
 
 | Agente | Squad | Modelo |
 |--------|-------|--------|
+| `meta-orquestrador` | Meta-estratégia | opus-4-7 |
 | `inteligencia-estrategica` | Inteligência | opus-4-7 |
 | `diretor-de-marketing` | Orquestração | opus-4-7 |
 | `content-strategist` | Conteúdo | sonnet-4-6 |
