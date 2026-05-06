@@ -469,11 +469,10 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 }
 .cat-btn:hover { color: var(--text); border-color: var(--purple); }
 .cat-btn.cat-active { background: var(--purple); color: #fff; border-color: var(--purple); }
-.proc-icon.proc-faded { opacity: .25; pointer-events: none; }
 .proc-icon .icon-toggle {
   position: absolute; top: 3px; right: 3px;
-  font-size: 8px; color: var(--muted); opacity: 0;
-  transition: opacity .15s;
+  font-size: 9px; color: var(--muted); opacity: 0;
+  transition: opacity .15s; cursor: pointer; z-index: 2;
 }
 .proc-icon:hover .icon-toggle { opacity: 1; }
 
@@ -569,7 +568,10 @@ body.compact .flowchart-step { padding: 9px; }
 <div class="panel" id="panel-processes">
   <div class="proc-header">
     <span class="proc-title">📌 Esteiras de Processo</span>
-    <span style="font-size:10px;color:var(--muted)" id="proc-count"></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;color:var(--muted)" id="proc-count"></span>
+      <button class="btn btn-secondary btn-sm" onclick="openManageEsteiras()" style="font-size:10px;padding:2px 7px">⚙ Gerenciar</button>
+    </div>
   </div>
   <div class="cat-filters" id="cat-filters"></div>
   <div class="proc-grid" id="proc-grid"></div>
@@ -767,6 +769,19 @@ body.compact .flowchart-step { padding: 9px; }
 
       <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="saveSettings()">💾 Salvar Configurações</button>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL — GERENCIAR ESTEIRAS
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-manage" onclick="closeIfOverlay(event,'modal-manage')">
+  <div class="modal" style="width:500px;max-height:85vh">
+    <div class="modal-header">
+      <span class="modal-title">⚙ Gerenciar Esteiras</span>
+      <button class="modal-close" onclick="closeModal('modal-manage')">✕</button>
+    </div>
+    <div class="modal-body" id="manage-body" style="overflow-y:auto"></div>
   </div>
 </div>
 
@@ -1023,7 +1038,8 @@ function toggleEsteira(id, event) {
     State.hiddenEsteiras.add(id);
   }
   saveHiddenEsteiras();
-  filterByCategory(State.activeFilter);
+  buildProcGrid();
+  rebuildSelect();
 }
 
 function saveHiddenEsteiras() {
@@ -1031,9 +1047,48 @@ function saveHiddenEsteiras() {
 }
 
 function updateProcCount() {
-  const visible = document.querySelectorAll('.proc-icon[data-id]:not([style*="display: none"])').length;
-  const total = ESTEIRAS.length;
-  document.getElementById('proc-count').textContent = `${visible}/${total} processos`;
+  const active = ESTEIRAS.length - State.hiddenEsteiras.size;
+  const visible = document.querySelectorAll('.proc-icon[data-id]:not([style*="none"])').length;
+  document.getElementById('proc-count').textContent = `${visible}/${active} visíveis`;
+}
+
+const CAT_NAMES = { G:'G — Inteligência', A:'A — Fundação', B:'B — Conteúdo', C:'C — Vídeo', D:'D — Social', E:'E — Ads', F:'F — Analytics' };
+
+function openManageEsteiras() {
+  const cats = {};
+  ESTEIRAS.forEach(e => {
+    const cat = e.id[0];
+    if (!cats[cat]) cats[cat] = [];
+    cats[cat].push(e);
+  });
+  let html = '<p style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5">Ative ou desative esteiras para manter o painel limpo. Nada é excluído — os arquivos e configurações são preservados.</p>';
+  Object.keys(cats).sort().forEach(cat => {
+    html += `<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${CAT_NAMES[cat] || cat}</div>`;
+    cats[cat].forEach(e => {
+      const on = !State.hiddenEsteiras.has(e.id);
+      html += `<div class="feature-row">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:14px">${e.icon}</span>
+          <div><span class="feature-label">${e.id} — ${e.name}</span><span class="feature-sub">${e.desc}</span></div>
+        </div>
+        <label class="toggle-sw">
+          <input type="checkbox" ${on ? 'checked' : ''} onchange="toggleEsteiraFromManage('${e.id}',this.checked)">
+          <span class="toggle-track"></span>
+        </label>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('manage-body').innerHTML = html;
+  openModal('modal-manage');
+}
+
+function toggleEsteiraFromManage(id, active) {
+  if (active) State.hiddenEsteiras.delete(id);
+  else State.hiddenEsteiras.add(id);
+  saveHiddenEsteiras();
+  buildProcGrid();
+  rebuildSelect();
 }
 
 /* ══════════════════════════════════════════════
@@ -1045,24 +1100,25 @@ function buildProcGrid() {
   ESTEIRAS.forEach(e => {
     const isHidden = State.hiddenEsteiras.has(e.id);
     const el = document.createElement('div');
-    el.className = 'proc-icon' + (isHidden ? ' proc-faded' : '');
+    el.className = 'proc-icon';
     el.id = 'proc-' + e.id;
     el.dataset.id = e.id;
-    el.style.position = 'relative';
+    el.style.cssText = `position:relative;display:${isHidden ? 'none' : ''}`;
     el.innerHTML = `
       <span class="icon-emoji">${e.icon}</span>
       <span class="icon-id" style="color:${e.color}">${e.id}</span>
       <span class="icon-name">${e.name}</span>
-      <span class="icon-toggle" title="${isHidden ? 'Ativar' : 'Desativar'}" onclick="toggleEsteira('${e.id}',event)">${isHidden ? '👁' : '⊘'}</span>`;
-    el.onclick = () => { if (!State.hiddenEsteiras.has(e.id)) showFlowchart(e.id); };
-    if (!isHidden) el.style.display = '';
+      <span class="icon-toggle" title="Desativar" onclick="toggleEsteira('${e.id}',event)">⊘</span>`;
+    el.onclick = () => showFlowchart(e.id);
     grid.appendChild(el);
   });
-  updateProcCount();
+  filterByCategory(State.activeFilter);
 }
 
-function buildEsteiraSelect() {
+function rebuildSelect() {
   const sel = document.getElementById('esteira-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Selecione —</option>';
   ESTEIRAS.forEach(e => {
     if (State.hiddenEsteiras.has(e.id)) return;
     const opt = document.createElement('option');
@@ -1070,6 +1126,11 @@ function buildEsteiraSelect() {
     opt.textContent = `${e.icon} ${e.id} — ${e.name}`;
     sel.appendChild(opt);
   });
+  if (cur && !State.hiddenEsteiras.has(cur)) sel.value = cur;
+}
+
+function buildEsteiraSelect() {
+  rebuildSelect();
 }
 
 /* ══════════════════════════════════════════════
@@ -1614,7 +1675,7 @@ function escapeHtml(t) {
 ══════════════════════════════════════════════ */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    ['modal-flowchart','modal-agent','modal-settings','modal-intern'].forEach(closeModal);
+    ['modal-flowchart','modal-agent','modal-settings','modal-intern','modal-manage'].forEach(closeModal);
   }
 });
 
